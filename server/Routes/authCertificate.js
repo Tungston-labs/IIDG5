@@ -268,13 +268,39 @@ router.post("/create-certificateimg", async (req, res) => {
 
 
 router.get('/get-customcertificates', async (req, res) => {
-    try {
-        const certificates = await Certificateimage.find({}).select('-image');
-        res.status(200).json({ success: true, certificates });
-    } catch (error) {
-        res.status(500).json({ error: "Error fetching certificates" });
-    }
+  try {
+    const page = parseInt(req.query.page) || 1;         
+    const limit = parseInt(req.query.limit) || 10;      
+    const skip = (page - 1) * limit;
+    const searchQuery = req.query.search || "";       
+
+    const searchCondition = searchQuery
+      ? { certificatenum: { $regex: searchQuery, $options: "i" } }
+      : {};
+
+    const total = await Certificateimage.countDocuments(searchCondition);
+
+    const certificates = await Certificateimage.find(searchCondition)
+      .select('-image') 
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); 
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      totalResults: total,
+      certificates,
+    });
+  } catch (error) {
+    console.error("Error fetching certificates:", error);
+    res.status(500).json({ error: "Error fetching certificates" });
+  }
 });
+
+
 // Get Single custom Certificate
 router.get("/get-customcertificate/:id", async (req, res) => {
   try {
