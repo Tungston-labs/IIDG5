@@ -15,5 +15,6 @@ const bulkCertificateSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+bulkCertificateSchema.index({ certificatenum: 1 });
 
 module.exports = mongoose.model('BulkCertificate', bulkCertificateSchema);

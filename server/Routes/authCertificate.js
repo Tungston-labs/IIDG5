@@ -7,6 +7,7 @@ const Certificateimage = require("../Models/certificateImageSchema");
 const bulkCertificateSchema = require("../Models/BulkCertificateScheme");
 const csvParser = require("csv-parser");
 const axios = require("axios");
+const { Certificate } = require("crypto");
 // Middleware for handling multipart/form-data
 router.use(formidable());
 
@@ -640,6 +641,44 @@ router.get("/bulk-certificate-photo/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching image:", error);
     return res.status(500).json({ error: "Error fetching image" });
+  }
+});
+// routes/certificate.js
+router.get('/search-certificate/:certificatenum', async (req, res) => {
+  const { certificatenum } = req.params;
+
+  try {
+    // 1. Check custom certificates first (priority)
+    const custom = await Certificateimage.findOne({ certificatenum });
+    if (custom) {
+      return res.status(200).json({
+        source: 'custom',
+        certificate: custom,
+      });
+    }
+
+    // 2. Then check bulk certificates
+    const bulk = await bulkCertificateSchema.findOne({ certificatenum });
+    if (bulk) {
+      return res.status(200).json({
+        source: 'bulk',
+        certificate: bulk,
+      });
+    }
+
+    // 3. Then check standard certificates
+    const standard = await Certificates.findOne({ certificatenum });
+    if (standard) {
+      return res.status(200).json({
+        source: 'standard',
+        certificate: standard,
+      });
+    }
+
+    res.status(404).json({ message: "Certificate not found" });
+  } catch (error) {
+    console.error("Error searching certificate:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
