@@ -80,12 +80,24 @@ router.get("/bulk-certificates", async (req, res) => {
 
 router.delete("/bulk-certificates/:id", async (req, res) => {
   try {
-    await bulkCertificateSchema.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Certificate deleted successfully." });
+    console.log("DELETE ID:", req.params.id);
+
+    const deleted = await BulkCertificate.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Certificate not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Certificate deleted successfully",
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete certificate." });
+    console.error("DELETE ERROR:", error);
+    res.status(500).json({ error: error.message });
   }
 });
+
 
 router.get("/bulk-certificates/:id", async (req, res) => {
   try {
@@ -98,17 +110,39 @@ router.get("/bulk-certificates/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch bulk certificate." });
   }
 });
-
 router.get("/get-bulkcertificates", async (req, res) => {
   try {
-    const certificates = await BulkCertificate.find({}).select("-image");
-    res.status(200).json({ success: true, certificates: certificates });
+    const page = parseInt(req.query.page) || 1;     
+    const limit = parseInt(req.query.limit) || 10;  
+    const skip = (page - 1) * limit;
+
+    const total = await BulkCertificate.countDocuments();
+
+    const certificates = await BulkCertificate.find({})
+      .select("-image")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      certificates,
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Error fetching certificates" });
   }
 });
 
-//Delete Bulk Uploaded Certificate
+router.post("/bulk-delete", async (req, res) => {
+  await BulkCertificate.deleteMany({ _id: { $in: req.body.ids } });
+  res.json({ success: true });
+});
+
 router.delete("/bulk-certificates/:id", async (req, res) => {
   try {
     await BulkCertificate.findByIdAndDelete(req.params.id);
@@ -117,9 +151,7 @@ router.delete("/bulk-certificates/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete certificate." });
   }
 });
-router.get("/test", (req, res) => {
-  res.send("Router is working!");
-});
+
 
 router.put(
   "/update-bulkcertificate/:id",
