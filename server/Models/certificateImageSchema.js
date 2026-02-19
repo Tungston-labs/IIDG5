@@ -9,5 +9,6 @@ const certificateImageSchema = mongoose.Schema({
 { timestamps: true }
 
 );
+certificateImageSchema.index({ certificatenum: 1 });
 
 module.exports = mongoose.model('Certificateimage', certificateImageSchema);
