@@ -44,7 +44,7 @@ const Footer = () => {
                     </div>
                 </div>
                 <div className='pt-8'>
-                    <div className='text-[#33517f] text-[1rem] font-urban max-md:text-[0.9rem] '>© Copyright 2024, YFLY International. Designed by
+                    <div className='text-[#33517f] text-[1rem] font-urban max-md:text-[0.9rem] '>© Copyright 2024,Designed by
                         <a href="https://tungstonlabs.com/" className='text-[#33517f] font-bold'> Tungston Labs</a>.
                     </div>
                 </div>
